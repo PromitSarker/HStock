@@ -5,10 +5,31 @@ const app = {
     },
 
     init() {
+        if (!this.checkAuth()) return;
         this.state.data = window.dataStore.load();
         this.navigate(this.state.currentView);
         this.setupEventListeners();
         console.log('App initialized');
+    },
+
+    checkAuth() {
+        const isAuthenticated = sessionStorage.getItem('homeostock_admin_auth');
+        if (!isAuthenticated) {
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('login-form').onsubmit = (e) => {
+                e.preventDefault();
+                const pwd = document.getElementById('admin-password').value;
+                if (pwd === 'admin123') { // Default password
+                    sessionStorage.setItem('homeostock_admin_auth', 'true');
+                    document.getElementById('login-overlay').style.display = 'none';
+                    this.init();
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            };
+            return false;
+        }
+        return true;
     },
 
     navigate(view) {
@@ -42,13 +63,21 @@ const app = {
                 pageTitle.textContent = 'Medicine Inventory';
                 mainContent.appendChild(components.inventory.render(this.state.data));
                 break;
+            case 'procurement':
+                pageTitle.textContent = 'Procurement (Stock In)';
+                mainContent.appendChild(components.procurement.render(this.state.data));
+                break;
             case 'deliveries':
-                pageTitle.textContent = 'Delivery Tracking';
+                pageTitle.textContent = 'Distribution (Stock Out)';
                 mainContent.appendChild(components.deliveries.render(this.state.data));
                 break;
             case 'employees':
                 pageTitle.textContent = 'Employee Management';
                 mainContent.appendChild(components.employees.render(this.state.data));
+                break;
+            case 'audit':
+                pageTitle.textContent = 'System Audit Logs';
+                mainContent.appendChild(components.audit.render(this.state.data));
                 break;
             case 'settings':
                 pageTitle.textContent = 'System Settings';

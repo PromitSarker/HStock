@@ -27,11 +27,11 @@ window.components.dashboard = {
                 </div>
                 <div class="card stat-card">
                     <div class="stat-icon" style="background: #e6f4ea; color: #1e8e3e;">
-                        <i data-lucide="users"></i>
+                        <i data-lucide="circle-dollar-sign"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>${stats.activeEmployees}</h3>
-                        <p>Active Employees</p>
+                        <h3>$${stats.totalValuation.toFixed(2)}</h3>
+                        <p>Total Stock Valuation</p>
                     </div>
                 </div>
                 <div class="card stat-card">
@@ -40,7 +40,7 @@ window.components.dashboard = {
                     </div>
                     <div class="stat-info">
                         <h3>${stats.lowStockItems}</h3>
-                        <p>Low Stock Items</p>
+                        <p>Low Stock Alerts</p>
                     </div>
                 </div>
             </div>
@@ -78,11 +78,19 @@ window.components.dashboard = {
     },
 
     calculateStats(data) {
+        let valuation = 0;
+        data.inventory.forEach(i => {
+            // Find latest unit cost from procurements
+            const procs = (data.procurements || []).filter(p => p.productId === i.id).sort((a,b) => b.id - a.id);
+            const unitCost = procs.length ? procs[0].unitCost : 0;
+            valuation += (i.stock * unitCost);
+        });
+
         return {
             totalStock: data.inventory.reduce((acc, item) => acc + item.stock, 0),
             pendingDeliveries: data.deliveries.filter(d => d.status === 'Pending').length,
-            activeEmployees: data.employees.filter(e => e.status === 'Active').length,
-            lowStockItems: data.inventory.filter(i => i.stock < 5).length
+            totalValuation: valuation,
+            lowStockItems: data.inventory.filter(i => i.stock <= (i.minAlert || 5)).length
         };
     },
 
