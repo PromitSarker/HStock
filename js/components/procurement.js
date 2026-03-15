@@ -51,8 +51,8 @@ window.components.procurement = {
         return new Date(dateStr).toLocaleDateString();
     },
 
-    showAddModal() {
-        const data = window.dataStore.load();
+    async showAddModal() {
+        const data = await window.dataStore.load();
         const modalContainer = document.getElementById('modal-container-procurement');
         modalContainer.innerHTML = `
             <div class="modal-overlay">
@@ -100,7 +100,7 @@ window.components.procurement = {
         if (window.lucide) window.lucide.createIcons();
     },
 
-    handleSubmit(event) {
+    async handleSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const productId = parseInt(formData.get('productId'));
@@ -110,7 +110,6 @@ window.components.procurement = {
         const date = formData.get('date');
 
         const newProcurement = {
-            id: Math.floor(1000 + Math.random() * 9000),
             productId,
             quantity,
             unitCost,
@@ -118,20 +117,11 @@ window.components.procurement = {
             date
         };
 
-        const data = window.dataStore.load();
-        
-        // Ensure array exists
-        if (!data.procurements) data.procurements = [];
-        data.procurements.unshift(newProcurement);
+        await window.dataStore.createItem('procurements', newProcurement);
 
-        // Auto-increment inventory stock
-        const productIndex = data.inventory.findIndex(i => i.id === productId);
-        if (productIndex !== -1) {
-            data.inventory[productIndex].stock += quantity;
-        }
-
-        window.dataStore.save(data);
-        app.state.data = data;
+        // Notify app to refresh everything
+        const freshData = await window.dataStore.load();
+        app.state.data = freshData;
         app.render();
         document.getElementById('modal-container-procurement').innerHTML = '';
     }

@@ -31,9 +31,8 @@ window.components.employees = {
                 </div>
             </div>
 
-            <!-- 4 Top Stat Cards matching mockup -->
             <div class="stats-grid">
-                <div class="card bg-pastel-green" style="padding: 24px; border-radius: 20px; box-shadow: none;">
+                <div class="card bg-pastel-green">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                         <div style="background: var(--success-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <i data-lucide="check-circle"></i>
@@ -44,7 +43,7 @@ window.components.employees = {
                     <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">Total registered staff.</p>
                 </div>
 
-                <div class="card bg-pastel-yellow" style="padding: 24px; border-radius: 20px; box-shadow: none;">
+                <div class="card bg-pastel-yellow">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                         <div style="background: var(--warning-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <i data-lucide="clock"></i>
@@ -55,7 +54,7 @@ window.components.employees = {
                     <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">Currently active employees.</p>
                 </div>
 
-                <div class="card bg-pastel-red" style="padding: 24px; border-radius: 20px; box-shadow: none;">
+                <div class="card bg-pastel-red">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                         <div style="background: var(--danger-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <i data-lucide="x-circle"></i>
@@ -66,7 +65,7 @@ window.components.employees = {
                     <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">Salaries yet to be paid.</p>
                 </div>
 
-                <div class="card bg-pastel-blue" style="padding: 24px; border-radius: 20px; box-shadow: none;">
+                <div class="card bg-pastel-blue">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                         <div style="background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <i data-lucide="wallet"></i>
@@ -78,17 +77,11 @@ window.components.employees = {
                 </div>
             </div>
 
-            <!-- Full-width Table Section -->
             <div class="card" style="padding: 32px; border-radius: 20px;">
                 <div class="table-filter-bar" style="margin-bottom: 32px;">
                     <div>
                         <div class="title">Employee Compliance List</div>
                         <p>Here are employee details and payment status for this month.</p>
-                    </div>
-                    <div class="filter-actions">
-                        <button class="btn btn-secondary bg-pastel-yellow" style="color: var(--warning-color); font-size: 14px; padding: 10px 16px; border-radius: 12px; border: none; font-weight: 600;">
-                            ${now.toLocaleString('default', { month: 'short', year: 'numeric' })} <i data-lucide="chevron-down" style="width: 16px;"></i>
-                        </button>
                     </div>
                 </div>
 
@@ -98,17 +91,16 @@ window.components.employees = {
                             <th style="padding-left: 24px;">Employee</th>
                             <th>Salary</th>
                             <th>Role</th>
-                            <th>Status (State)</th>
-                            <th>Payment Status</th>
+                            <th>Status</th>
+                            <th>Payment</th>
                             <th style="text-align: right; padding-right: 24px;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="employees-table-body">
                         ${data.employees.map((emp, index) => {
                             const isPaid = salariesThisMonth.some(s => s.employeeId === emp.id);
-                            const rowBg = index % 2 !== 0 ? 'background-color: #f7f8fa;' : '';
                             return `
-                            <tr style="${rowBg}">
+                            <tr>
                                 <td style="padding-left: 24px;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <div class="avatar" style="width: 32px; height: 32px; font-size: 14px; background: ${this.getRandomColor(emp.name)};">
@@ -145,8 +137,8 @@ window.components.employees = {
         return container;
     },
 
-    showRowActionModal(id) {
-        const data = window.dataStore.load();
+    async showRowActionModal(id) {
+        const data = await window.dataStore.load();
         const emp = data.employees.find(e => e.id === id);
         
         const now = new Date();
@@ -194,15 +186,18 @@ window.components.employees = {
         document.getElementById('modal-container').innerHTML = '';
     },
 
-    toggleStatus(id) {
-        const data = window.dataStore.load();
+    async toggleStatus(id) {
+        const data = await window.dataStore.load();
         const employee = data.employees.find(e => e.id === id);
         if (employee) {
-            employee.status = employee.status === 'Active' ? 'On Leave' : 'Active';
-            window.dataStore.save(data);
-            app.state.data = data;
+            const newStatus = employee.status === 'Active' ? 'On Leave' : 'Active';
+            const updated = { ...employee, status: newStatus };
+            delete updated.id;
+            
+            await window.dataStore.updateItem('employees', id, updated);
+            const freshData = await window.dataStore.load();
+            app.state.data = freshData;
             app.render();
-            // We re-render, so the modal will be gone which is fine for a toggle action.
         }
     },
 
@@ -215,10 +210,8 @@ window.components.employees = {
         return colors[Math.abs(hash) % colors.length];
     },
 
-    showAddModal() {
+    async showAddModal() {
         const modalContainer = document.getElementById('modal-container') || document.body;
-        // if modal-container doesn't exist, we append a temp one or just use body.
-        // It's safer to just create a div and append to body for this standalone modal
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
@@ -261,13 +254,11 @@ window.components.employees = {
         document.body.appendChild(modal);
         if (window.lucide) window.lucide.createIcons();
 
-        document.getElementById('add-employee-form').onsubmit = (e) => {
+        document.getElementById('add-employee-form').onsubmit = async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const data = window.dataStore.load();
             
             const newEmployee = {
-                id: Date.now(),
                 name: formData.get('name'),
                 role: formData.get('role'),
                 contact: formData.get('contact'),
@@ -276,20 +267,19 @@ window.components.employees = {
                 joinedDate: new Date().toISOString().split('T')[0]
             };
 
-            data.employees.push(newEmployee);
-            window.dataStore.save(data);
-            app.state.data = data;
+            await window.dataStore.createItem('employees', newEmployee);
+            const freshData = await window.dataStore.load();
+            app.state.data = freshData;
             modal.remove();
             app.render();
         };
     },
 
-    showPaymentModal(employeeId) {
-        // If coming from another modal, close it first
+    async showPaymentModal(employeeId) {
         const existingModal = document.querySelector('.modal-overlay');
         if(existingModal) existingModal.remove();
 
-        const data = window.dataStore.load();
+        const data = await window.dataStore.load();
         const emp = data.employees.find(e => e.id === employeeId);
         if(!emp) return;
 
@@ -323,22 +313,19 @@ window.components.employees = {
         document.body.appendChild(modal);
         if (window.lucide) window.lucide.createIcons();
 
-        document.getElementById('payment-form').onsubmit = (e) => {
+        document.getElementById('payment-form').onsubmit = async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const freshData = window.dataStore.load();
             
             const newPayment = {
-                id: Date.now(),
                 employeeId: parseInt(formData.get('employeeId')),
                 amount: parseFloat(formData.get('amount')),
                 date: formData.get('date'),
                 status: 'Paid'
             };
 
-            if (!freshData.salaries) freshData.salaries = [];
-            freshData.salaries.push(newPayment);
-            window.dataStore.save(freshData);
+            await window.dataStore.createItem('salaries', newPayment);
+            const freshData = await window.dataStore.load();
             app.state.data = freshData;
             modal.remove();
             app.render();
@@ -350,12 +337,11 @@ window.components.employees = {
         return new Date(dateStr).toLocaleDateString();
     },
 
-    showSalaryModal(employeeId) {
-        // If coming from another modal, close it first
+    async showSalaryModal(employeeId) {
         const existingModal = document.querySelector('.modal-overlay');
         if(existingModal) existingModal.remove();
 
-        const data = window.dataStore.load();
+        const data = await window.dataStore.load();
         const employee = data.employees.find(e => e.id === employeeId);
         const history = (data.salaries || []).filter(s => s.employeeId === employeeId);
 

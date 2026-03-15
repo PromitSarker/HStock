@@ -28,7 +28,8 @@ window.components.deliveries = {
                     </thead>
                     <tbody>
                         ${data.deliveries.map(delivery => {
-                            const itemsText = (delivery.items || []).map(item => {
+                            const items = typeof delivery.items === 'string' ? JSON.parse(delivery.items) : (delivery.items || []);
+                            const itemsText = items.map(item => {
                                 const prod = data.inventory.find(i => i.id === item.productId);
                                 return prod ? `${prod.name} (x${item.quantity})` : 'Unknown Item';
                             }).join(', ');
@@ -38,13 +39,10 @@ window.components.deliveries = {
                                     <td>#${delivery.id}</td>
                                     <td>${delivery.date}</td>
                                     <td style="font-weight: 600;">${delivery.recipient}</td>
-                                    <td style="font-size: 14px; color: var(--text-secondary);">${itemsText || delivery.products}</td>
+                                    <td style="font-size: 14px; color: var(--text-secondary);">${itemsText || delivery.products || 'No items'}</td>
                                     <td><span class="badge ${this.getStatusBadgeClass(delivery.status)}">${delivery.status}</span></td>
                                     <td>
                                         <div class="actions">
-                                            <button class="btn-text" onclick="components.deliveries.updateStatus(${delivery.id})">
-                                                Update Status
-                                            </button>
                                             <button class="btn-icon" title="Print Slip" onclick="components.deliveries.printSlip(${delivery.id})">
                                                 <i data-lucide="printer"></i>
                                             </button>
@@ -63,16 +61,15 @@ window.components.deliveries = {
         return container;
     },
 
-    showModal() {
+    async showModal() {
         this.state.draftItems = [];
-        this.renderModal();
+        await this.renderModal();
     },
 
-    renderModal() {
-        const data = window.dataStore.load();
+    async renderModal() {
+        const data = await window.dataStore.load();
         const modalContainer = document.getElementById('modal-container-deliveries');
         
-        // Calculate items total
         let totalVal = 0;
         const draftItemsHTML = this.state.draftItems.map((item, index) => {
             const prod = data.inventory.find(i => i.id === item.productId);
@@ -116,7 +113,7 @@ window.components.deliveries = {
                     <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 24px; background: #f8f9fa;">
                         <h3 style="font-size: 16px; margin-bottom: 12px;">Add Item</h3>
                         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px;">
-                            <select id="dist-product" class="form-input" onchange="components.deliveries.onProductSelect(this.value)">
+                            <select id="dist-product" class="form-input">
                                 <option value="">-- Select Product --</option>
                                 ${data.inventory.filter(i => i.stock > 0).map(i => `<option value="${i.id}">${i.name} (${i.stock} in stock)</option>`).join('')}
                             </select>
@@ -146,12 +143,7 @@ window.components.deliveries = {
         if (window.lucide) window.lucide.createIcons();
     },
 
-    onProductSelect(productId) {
-        if(!productId) return;
-        // Optional: auto-fill a suggested price here (if tracking avg cost)
-    },
-
-    addDraftItem() {
+    async addDraftItem() {
         const prodId = document.getElementById('dist-product').value;
         const qty = parseInt(document.getElementById('dist-qty').value);
         const price = parseFloat(document.getElementById('dist-price').value);
@@ -161,7 +153,7 @@ window.components.deliveries = {
             return;
         }
 
-        const data = window.dataStore.load();
+        const data = await window.dataStore.load();
         const prod = data.inventory.find(i => i.id == prodId);
         if(qty > prod.stock) {
             alert(`Cannot distribute more than available stock (${prod.stock}).`);
@@ -174,19 +166,19 @@ window.components.deliveries = {
             distributionPrice: price
         });
         
-        this.renderModal();
+        await this.renderModal();
     },
 
-    removeDraftItem(index) {
+    async removeDraftItem(index) {
         this.state.draftItems.splice(index, 1);
-        this.renderModal();
+        await this.renderModal();
     },
 
     closeModal() {
         document.getElementById('modal-container-deliveries').innerHTML = '';
     },
 
-    handleSubmit() {
+    async handleSubmit() {
         const recipient = document.getElementById('dist-recipient').value;
         const rawDate = document.getElementById('dist-date').value;
 
@@ -208,62 +200,42 @@ window.components.deliveries = {
             minute: '2-digit'
         });
 
-        const data = window.dataStore.load();
-        
         const newDistribution = {
-            id: Math.floor(1000 + Math.random() * 9000),
             date: formattedDate,
             recipient: recipient,
-            products: '', // legacy compat
-            items: [...this.state.draftItems],
-            status: 'Delivered'
+            items: [...this.state.draftItems]
         };
 
-        data.deliveries.unshift(newDistribution);
+        await window.dataStore.createItem('deliveries', newDistribution);
 
-        // Deduct from stock
-        this.state.draftItems.forEach(item => {
-            const productIndex = data.inventory.findIndex(i => i.id === item.productId);
-            if (productIndex !== -1) {
-                data.inventory[productIndex].stock -= item.quantity;
-            }
-        });
-
-        window.dataStore.save(data);
-        app.state.data = data;
+        const freshData = await window.dataStore.load();
+        app.state.data = freshData;
         app.render();
         this.closeModal();
     },
 
     getStatusBadgeClass(status) {
+        if (!status) return 'badge-success';
         switch (status.toLowerCase()) {
+            case 'completed':
             case 'delivered': return 'badge-success';
             case 'pending': return 'badge-warning';
-            default: return '';
+            default: return 'badge-success';
         }
     },
 
-    updateStatus(id) {
-        const data = window.dataStore.load();
-        const delivery = data.deliveries.find(d => d.id === id);
-        if (delivery) {
-            delivery.status = delivery.status === 'Pending' ? 'Delivered' : 'Pending';
-            window.dataStore.update('deliveries', data.deliveries); // Sync update
-            app.state.data = data;
-            app.render();
-        }
-    },
-
-    printSlip(id) {
-        const data = window.dataStore.load();
+    async printSlip(id) {
+        const data = await window.dataStore.load();
         const order = data.deliveries.find(d => d.id === id);
         if (!order) return;
 
         let itemsRows = '';
         let totalVal = 0;
 
-        if (order.items && order.items.length > 0) {
-            itemsRows = order.items.map(item => {
+        const items = Array.isArray(order.items) ? order.items : [];
+
+        if (items.length > 0) {
+            itemsRows = items.map(item => {
                 const prod = data.inventory.find(i => i.id === item.productId);
                 const lineTotal = item.quantity * item.distributionPrice;
                 totalVal += lineTotal;
@@ -279,7 +251,7 @@ window.components.deliveries = {
         } else {
             itemsRows = `
                 <tr>
-                    <td colspan="4">${order.products} (Legacy Record)</td>
+                    <td colspan="4">${order.products || 'No items listed'}</td>
                 </tr>
             `;
         }

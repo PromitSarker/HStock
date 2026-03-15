@@ -81,8 +81,8 @@ window.components.inventory = {
         return container;
     },
 
-    showModal(id = null) {
-        const data = window.dataStore.load();
+    async showModal(id = null) {
+        const data = await window.dataStore.load();
         const item = id ? data.inventory.find(i => i.id === id) : { 
             name: '', category: 'Dilution', potency: '', batch: '', stock: 0, uom: 'pcs', minAlert: 5, expiry: '' 
         };
@@ -159,11 +159,10 @@ window.components.inventory = {
         document.getElementById('modal-container').innerHTML = '';
     },
 
-    handleSubmit(event, id) {
+    async handleSubmit(event, id) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        
-        const data = window.dataStore.load();
+        const data = await window.dataStore.load();
         
         let oldStock = 0;
         if (id) {
@@ -174,7 +173,6 @@ window.components.inventory = {
         const newStock = parseInt(formData.get('stock'));
 
         const newData = {
-            id: id || Date.now(),
             name: formData.get('name'),
             category: formData.get('category'),
             potency: formData.get('potency'),
@@ -186,14 +184,9 @@ window.components.inventory = {
         };
 
         if (id) {
-            const index = data.inventory.findIndex(i => i.id === id);
-            data.inventory[index] = newData;
-            
-            // If stock was modified during edit, log to audit
+            await window.dataStore.updateItem('inventory', id, newData);
             if(oldStock !== newStock) {
-                if(!data.auditLogs) data.auditLogs = [];
-                data.auditLogs.unshift({
-                    id: Date.now(),
+                await window.dataStore.createItem('audit-logs', {
                     date: new Date().toISOString(),
                     action: 'Manual Stock Edit',
                     details: `Edited ${newData.name} stock from ${oldStock} to ${newStock}`,
@@ -201,22 +194,22 @@ window.components.inventory = {
                 });
             }
         } else {
-            data.inventory.unshift(newData);
+            await window.dataStore.createItem('inventory', newData);
         }
 
-        window.dataStore.save(data);
-        app.state.data = data;
+        const freshData = await window.dataStore.load();
+        app.state.data = freshData;
         app.render();
         this.closeModal();
     },
 
-    adjustStock(id) {
-        const data = window.dataStore.load();
+    async adjustStock(id) {
+        const data = await window.dataStore.load();
         const item = data.inventory.find(i => i.id === id);
         if(!item) return;
 
         const newStockRaw = prompt(`Adjust stock for ${item.name} (Current: ${item.stock}${item.uom}):`, item.stock);
-        if (newStockRaw === null) return; // cancelled
+        if (newStockRaw === null) return;
 
         const newStock = parseInt(newStockRaw);
         if (isNaN(newStock) || newStock < 0) {
@@ -225,39 +218,40 @@ window.components.inventory = {
         }
 
         if (newStock !== item.stock) {
-            if(!data.auditLogs) data.auditLogs = [];
-            data.auditLogs.unshift({
-                id: Date.now(),
+            await window.dataStore.createItem('audit-logs', {
                 date: new Date().toISOString(),
                 action: 'Direct Stock Adjustment',
                 details: `Adjusted ${item.name} stock from ${item.stock} to ${newStock}`,
                 user: 'Admin'
             });
 
-            item.stock = newStock;
-            window.dataStore.save(data);
-            app.state.data = data;
+            const updateData = { ...item };
+            delete updateData.id;
+            updateData.stock = newStock;
+            await window.dataStore.updateItem('inventory', id, updateData);
+
+            const freshData = await window.dataStore.load();
+            app.state.data = freshData;
             app.render();
         }
     },
 
-    deleteItem(id) {
+    async deleteItem(id) {
         if (confirm('Are you sure you want to delete this medicine?')) {
-            const data = window.dataStore.load();
+            const data = await window.dataStore.load();
             const item = data.inventory.find(i => i.id === id);
-            data.inventory = data.inventory.filter(i => i.id !== id);
             
-            if(!data.auditLogs) data.auditLogs = [];
-            data.auditLogs.unshift({
-                id: Date.now(),
+            await window.dataStore.createItem('audit-logs', {
                 date: new Date().toISOString(),
                 action: 'Item Deleted',
                 details: `Deleted ${item ? item.name : 'Unknown Item'}`,
                 user: 'Admin'
             });
 
-            window.dataStore.save(data);
-            app.state.data = data;
+            await window.dataStore.deleteItem('inventory', id);
+
+            const freshData = await window.dataStore.load();
+            app.state.data = freshData;
             app.render();
         }
     },

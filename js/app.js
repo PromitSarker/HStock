@@ -4,9 +4,9 @@ const app = {
         data: null
     },
 
-    init() {
+    async init() {
         if (!this.checkAuth()) return;
-        this.state.data = window.dataStore.load();
+        this.state.data = await window.dataStore.load();
         this.navigate(this.state.currentView);
         this.setupEventListeners();
         console.log('App initialized');
