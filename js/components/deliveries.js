@@ -15,18 +15,19 @@ window.components.deliveries = {
             </div>
             
             <div class="card">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Date</th>
-                            <th>Recipient</th>
-                            <th>Items</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Date</th>
+                                <th>Recipient</th>
+                                <th>Items</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         ${data.deliveries.map(delivery => {
                             const items = typeof delivery.items === 'string' ? JSON.parse(delivery.items) : (delivery.items || []);
                             const itemsText = items.map(item => {
@@ -54,6 +55,7 @@ window.components.deliveries = {
                     </tbody>
                 </table>
             </div>
+        </div>
             <div id="modal-container-deliveries"></div>
         `;
 

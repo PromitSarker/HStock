@@ -12,11 +12,25 @@
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-    <nav class="sidebar">
+    <div class="mobile-header" style="display: none;">
         <div class="logo">
             <i data-lucide="layout-dashboard" class="highlight"></i>
-            <span>Homeo<span class="highlight">Stock</span></span>
+            <span>HomeoStock</span>
+        </div>
+        <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
+            <i data-lucide="menu"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar">
+        <div class="logo">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i data-lucide="layout-dashboard" class="highlight"></i>
+                <span>Homeo<span class="highlight">Stock</span></span>
+            </div>
+            <button class="mobile-nav-toggle" style="color: white; padding: 0;" onclick="app.toggleSidebar()">
+                <i data-lucide="x"></i>
+            </button>
         </div>
         <ul class="nav-links">
             <li class="nav-item">

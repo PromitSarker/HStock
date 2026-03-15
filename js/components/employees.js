@@ -85,18 +85,19 @@ window.components.employees = {
                     </div>
                 </div>
 
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th style="padding-left: 24px;">Employee</th>
-                            <th>Salary</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th style="text-align: right; padding-right: 24px;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employees-table-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="padding-left: 24px;">Employee</th>
+                                <th>Salary</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th style="text-align: right; padding-right: 24px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-table-body">
                         ${data.employees.map((emp, index) => {
                             const isPaid = salariesThisMonth.some(s => s.employeeId === emp.id);
                             return `
@@ -130,6 +131,7 @@ window.components.employees = {
                     </tbody>
                 </table>
             </div>
+        </div>
             <div id="modal-container"></div>
         `;
 

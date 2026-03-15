@@ -12,16 +12,17 @@ window.components.audit = {
                     <p style="color: var(--text-secondary); font-size: 14px;">Records of manual stock adjustments and deletions.</p>
                 </div>
                 
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>Action Type</th>
-                            <th>Details</th>
-                            <th>User</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Action Type</th>
+                                <th>Details</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         ${logs.length > 0 ? logs.map(log => `
                             <tr>
                                 <td style="white-space: nowrap;">${new Date(log.date).toLocaleString()}</td>
@@ -37,6 +38,7 @@ window.components.audit = {
                     </tbody>
                 </table>
             </div>
+        </div>
         `;
 
         container.innerHTML = html;

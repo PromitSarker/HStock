@@ -11,33 +11,35 @@ window.components.procurement = {
             </div>
             
             <div class="card">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Trans ID</th>
-                            <th>Date</th>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Unit Cost</th>
-                            <th>Supplier</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${(data.procurements || []).map(p => {
-                            const product = data.inventory.find(i => i.id === p.productId);
-                            return `
-                                <tr>
-                                    <td>#${p.id}</td>
-                                    <td>${this.formatDate(p.date)}</td>
-                                    <td style="font-weight: 600;">${product ? product.name + ' (' + product.potency + ')' : 'Unknown'}</td>
-                                    <td class="text-success" style="font-weight: 700;">+${p.quantity}</td>
-                                    <td>$${p.unitCost.toFixed(2)}</td>
-                                    <td>${p.supplier}</td>
-                                </tr>
-                            `;
-                        }).join('') || '<tr><td colspan="6" style="text-align:center; padding: 20px;">No procurements logged yet.</td></tr>'}
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Trans ID</th>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Unit Cost</th>
+                                <th>Supplier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(data.procurements || []).map(p => {
+                                const product = data.inventory.find(i => i.id === p.productId);
+                                return `
+                                    <tr>
+                                        <td>#${p.id}</td>
+                                        <td>${this.formatDate(p.date)}</td>
+                                        <td style="font-weight: 600;">${product ? product.name + ' (' + product.potency + ')' : 'Unknown'}</td>
+                                        <td class="text-success" style="font-weight: 700;">+${p.quantity}</td>
+                                        <td>$${p.unitCost.toFixed(2)}</td>
+                                        <td>${p.supplier}</td>
+                                    </tr>
+                                `;
+                            }).join('') || '<tr><td colspan="6" style="text-align:center; padding: 20px;">No procurements logged yet.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div id="modal-container-procurement"></div>
         `;

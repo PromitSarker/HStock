@@ -22,18 +22,19 @@ window.components.inventory = {
             </div>
             
             <div class="card">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Medicine & Cat</th>
-                            <th>Potency/Batch</th>
-                            <th>Stock & UoM</th>
-                            <th>Unit Cost</th>
-                            <th>Valuation</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Medicine & Cat</th>
+                                <th>Potency/Batch</th>
+                                <th>Stock & UoM</th>
+                                <th>Unit Cost</th>
+                                <th>Valuation</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-list">
                         ${data.inventory.map(item => {
                             const unitCost = getUnitCost(item.id);
                             const valuation = item.stock * unitCost;
@@ -74,6 +75,7 @@ window.components.inventory = {
                     </tbody>
                 </table>
             </div>
+        </div>
             <div id="modal-container"></div>
         `;
 

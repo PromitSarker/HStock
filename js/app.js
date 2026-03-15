@@ -36,6 +36,19 @@ const app = {
         this.state.currentView = view;
         this.updateActiveNavLink();
         this.render();
+        
+        // Auto-close sidebar on mobile after navigation
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+        }
+    },
+
+    toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('active');
+        }
     },
 
     updateActiveNavLink() {
