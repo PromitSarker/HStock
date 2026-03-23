@@ -1,7 +1,9 @@
 const app = {
     state: {
         currentView: 'dashboard',
-        data: null
+        data: null,
+        language: 'en',
+        currency: '৳'
     },
 
     async init() {
@@ -24,6 +26,7 @@ const app = {
                     document.getElementById('login-overlay').style.display = 'none';
                     this.init();
                 } else {
+                    document.getElementById('login-error').textContent = this.t('loginError');
                     document.getElementById('login-error').style.display = 'block';
                 }
             };
@@ -40,7 +43,7 @@ const app = {
         // Auto-close sidebar on mobile after navigation
         const sidebar = document.querySelector('.sidebar');
         if (sidebar && sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
+            this.toggleSidebar();
         }
     },
 
@@ -48,6 +51,7 @@ const app = {
         const sidebar = document.querySelector('.sidebar');
         if (sidebar) {
             sidebar.classList.toggle('active');
+            // Overlay is handled by CSS (display: block when sidebar is active)
         }
     },
 
@@ -69,31 +73,31 @@ const app = {
 
         switch (this.state.currentView) {
             case 'dashboard':
-                pageTitle.textContent = 'Dashboard Overview';
+                pageTitle.textContent = this.t('dashboard');
                 mainContent.appendChild(components.dashboard.render(this.state.data));
                 break;
             case 'inventory':
-                pageTitle.textContent = 'Medicine Inventory';
+                pageTitle.textContent = this.t('inventory');
                 mainContent.appendChild(components.inventory.render(this.state.data));
                 break;
             case 'procurement':
-                pageTitle.textContent = 'Procurement (Stock In)';
+                pageTitle.textContent = this.t('procurement');
                 mainContent.appendChild(components.procurement.render(this.state.data));
                 break;
             case 'deliveries':
-                pageTitle.textContent = 'Distribution (Stock Out)';
+                pageTitle.textContent = this.t('deliveries');
                 mainContent.appendChild(components.deliveries.render(this.state.data));
                 break;
             case 'employees':
-                pageTitle.textContent = 'Employee Management';
+                pageTitle.textContent = this.t('employees');
                 mainContent.appendChild(components.employees.render(this.state.data));
                 break;
             case 'audit':
-                pageTitle.textContent = 'System Audit Logs';
+                pageTitle.textContent = this.t('audit');
                 mainContent.appendChild(components.audit.render(this.state.data));
                 break;
             case 'settings':
-                pageTitle.textContent = 'System Settings';
+                pageTitle.textContent = this.t('settings');
                 mainContent.appendChild(components.settings.render(this.state.data));
                 break;
             default:
@@ -103,6 +107,65 @@ const app = {
         // Re-initialize icons for dynamic content
         if (window.lucide) {
             window.lucide.createIcons();
+        }
+
+        this.updateLanguageUI();
+        this.updateSidebarLabels();
+    },
+
+    t(key) {
+        const lang = this.state.language;
+        return window.translations[lang][key] || key;
+    },
+
+    toggleLanguage() {
+        this.state.language = this.state.language === 'en' ? 'bn' : 'en';
+        this.render();
+        this.updateSidebarLabels();
+    },
+
+    updateLanguageUI() {
+        if (this.state.language === 'bn') {
+            document.body.classList.add('lang-bn');
+        } else {
+            document.body.classList.remove('lang-bn');
+        }
+
+        const toggleBtn = document.getElementById('lang-toggle');
+        if (toggleBtn) {
+            const span = toggleBtn.querySelector('span');
+            if (span) {
+                span.textContent = this.state.language === 'en' ? 'Bengali' : 'English';
+            }
+        }
+
+        const searchInput = document.querySelector('.search-bar');
+        if (searchInput) {
+            searchInput.placeholder = this.t('searchPlaceholder');
+        }
+    },
+
+    updateSidebarLabels() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            const span = link.querySelector('span');
+            if (!span) return;
+            
+            const onclick = link.getAttribute('onclick');
+            if (onclick.includes('dashboard')) span.textContent = this.t('dashboard');
+            else if (onclick.includes('inventory')) span.textContent = this.t('inventory');
+            else if (onclick.includes('procurement')) span.textContent = this.t('procurement');
+            else if (onclick.includes('deliveries')) span.textContent = this.t('deliveries');
+            else if (onclick.includes('employees')) span.textContent = this.t('employees');
+            else if (onclick.includes('audit')) span.textContent = this.t('audit');
+            else if (onclick.includes('settings')) span.textContent = this.t('settings');
+        });
+
+        const logoText = document.querySelector('.logo h1');
+        if (logoText && this.state.language === 'bn') {
+            logoText.textContent = 'হোমিওস্টক';
+        } else if (logoText) {
+            logoText.textContent = 'HomeoStock';
         }
     },
 

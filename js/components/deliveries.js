@@ -1,16 +1,16 @@
 window.components.deliveries = {
-    state: {
-        draftItems: []
-    },
+  state: {
+    draftItems: [],
+  },
 
-    render(data) {
-        const container = document.createElement('div');
-        container.className = 'deliveries-container';
+  render(data) {
+    const container = document.createElement("div");
+    container.className = "deliveries-container";
 
-        const deliveriesHTML = `
+    const deliveriesHTML = `
             <div class="action-bar card">
                 <button class="btn btn-primary" onclick="components.deliveries.showModal()">
-                    <i data-lucide="package-minus"></i> New Distribution
+                    <i data-lucide="package-minus"></i> ${app.t('newDistribution')}
                 </button>
             </div>
             
@@ -19,39 +19,50 @@ window.components.deliveries = {
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Transaction ID</th>
-                                <th>Date</th>
-                                <th>Recipient</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>${app.t('transId')}</th>
+                                <th>${app.t('date')}</th>
+                                <th>${app.t('recipient')}</th>
+                                <th>${app.t('items')}</th>
+                                <th>${app.t('status')}</th>
+                                <th>${app.t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
-                        ${data.deliveries.map(delivery => {
-                            const items = typeof delivery.items === 'string' ? JSON.parse(delivery.items) : (delivery.items || []);
-                            const itemsText = items.map(item => {
-                                const prod = data.inventory.find(i => i.id === item.productId);
-                                return prod ? `${prod.name} (x${item.quantity})` : 'Unknown Item';
-                            }).join(', ');
+                        ${data.deliveries
+                          .map((delivery) => {
+                            const items =
+                              typeof delivery.items === "string"
+                                ? JSON.parse(delivery.items)
+                                : delivery.items || [];
+                            const itemsText = items
+                              .map((item) => {
+                                const prod = data.inventory.find(
+                                  (i) => i.id === item.productId,
+                                );
+                                return prod
+                                  ? `${prod.name} (x${item.quantity})`
+                                  : "Unknown Item";
+                              })
+                              .join(", ");
 
                             return `
                                 <tr>
                                     <td>#${delivery.id}</td>
                                     <td>${delivery.date}</td>
-                                    <td style="font-weight: 600;">${delivery.recipient}</td>
-                                    <td style="font-size: 14px; color: var(--text-secondary);">${itemsText || delivery.products || 'No items'}</td>
+                                    <td class="font-600">${delivery.recipient}</td>
+                                    <td class="text-secondary">${itemsText || delivery.products || "No items"}</td>
                                     <td><span class="badge ${this.getStatusBadgeClass(delivery.status)}">${delivery.status}</span></td>
                                     <td>
                                         <div class="actions">
-                                            <button class="btn-icon" title="Print Slip" onclick="components.deliveries.printSlip(${delivery.id})">
+                                            <button class="icon-btn" title="Print Slip" onclick="components.deliveries.printSlip(${delivery.id})">
                                                 <i data-lucide="printer"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             `;
-                        }).join('')}
+                          })
+                          .join("")}
                     </tbody>
                 </table>
             </div>
@@ -59,65 +70,77 @@ window.components.deliveries = {
             <div id="modal-container-deliveries"></div>
         `;
 
-        container.innerHTML = deliveriesHTML;
-        return container;
-    },
+    container.innerHTML = deliveriesHTML;
+    return container;
+  },
 
-    async showModal() {
-        this.state.draftItems = [];
-        await this.renderModal();
-    },
+  async showModal() {
+    this.state.draftItems = [];
+    await this.renderModal();
+  },
 
-    async renderModal() {
-        const data = await window.dataStore.load();
-        const modalContainer = document.getElementById('modal-container-deliveries');
-        
-        let totalVal = 0;
-        const draftItemsHTML = this.state.draftItems.map((item, index) => {
-            const prod = data.inventory.find(i => i.id === item.productId);
-            const lineTotal = item.quantity * item.distributionPrice;
-            totalVal += lineTotal;
-            return `
-                <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border-color); align-items: center;">
+  async renderModal() {
+    const data = await window.dataStore.load();
+    const modalContainer = document.getElementById(
+      "modal-container-deliveries",
+    );
+
+    let totalVal = 0;
+    const draftItemsHTML =
+      this.state.draftItems
+        .map((item, index) => {
+          const prod = data.inventory.find((i) => i.id === item.productId);
+          const lineTotal = item.quantity * item.distributionPrice;
+          totalVal += lineTotal;
+          return `
+                <div class="draft-item">
                     <div>
-                        <strong>${prod ? prod.name : 'Item'}</strong> <br>
+                        <strong>${prod ? prod.name : "Item"}</strong> <br>
                         <small class="text-secondary">${item.quantity} x $${item.distributionPrice.toFixed(2)}</small>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-weight: 600;">$${lineTotal.toFixed(2)}</span>
-                        <button type="button" class="btn-icon text-danger" onclick="components.deliveries.removeDraftItem(${index})"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
+                    <div class="draft-item-actions">
+                        <span class="font-600">${app.state.currency}${lineTotal.toFixed(2)}</span>
+                        <button type="button" class="icon-btn text-danger" onclick="components.deliveries.removeDraftItem(${index})"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
             `;
-        }).join('') || '<div style="padding: 12px; text-align: center; color: var(--text-secondary);">No items added yet.</div>';
+        })
+        .join("") ||
+      '<div style="padding: 12px; text-align: center; color: var(--text-secondary);">No items added yet.</div>';
 
-        modalContainer.innerHTML = `
+    modalContainer.innerHTML = `
             <div class="modal-overlay">
                 <div class="modal-content fade-in" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header">
-                        <h2>New Distribution (Stock Out)</h2>
-                        <button class="btn-icon" onclick="components.deliveries.closeModal()">
+                        <h2>${app.t('newDistribution')}</h2>
+                        <button class="icon-btn" onclick="components.deliveries.closeModal()">
                             <i data-lucide="x"></i>
                         </button>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div class="form-grid form-grid-2 form-grid-section">
                         <div class="form-group">
                             <label>Recipient Name</label>
                             <input type="text" id="dist-recipient" class="form-input" placeholder="e.g. John Doe">
                         </div>
                         <div class="form-group">
                             <label>Date & Time</label>
-                            <input type="datetime-local" id="dist-date" class="form-input" value="${new Date().toISOString().slice(0,16)}">
+                            <input type="datetime-local" id="dist-date" class="form-input" value="${new Date().toISOString().slice(0, 16)}">
                         </div>
                     </div>
 
                     <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 24px; background: #f8f9fa;">
                         <h3 style="font-size: 16px; margin-bottom: 12px;">Add Item</h3>
-                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px;">
+                        <div class="form-grid form-grid-2-1-1 form-grid-tight">
                             <select id="dist-product" class="form-input">
                                 <option value="">-- Select Product --</option>
-                                ${data.inventory.filter(i => i.stock > 0).map(i => `<option value="${i.id}">${i.name} (${i.stock} in stock)</option>`).join('')}
+                                ${data.inventory
+                                  .filter((i) => i.stock > 0)
+                                  .map(
+                                    (i) =>
+                                      `<option value="${i.id}">${i.name} (${i.stock} in stock)</option>`,
+                                  )
+                                  .join("")}
                             </select>
                             <input type="number" id="dist-qty" class="form-input" placeholder="Qty" min="1">
                             <input type="number" id="dist-price" class="form-input" placeholder="Price ($)" step="0.01">
@@ -131,7 +154,7 @@ window.components.deliveries = {
                         <h3 style="font-size: 16px; margin-bottom: 12px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">Items List</h3>
                         ${draftItemsHTML}
                         <div style="text-align: right; margin-top: 12px; font-weight: 700; font-size: 18px;">
-                            Total: $${totalVal.toFixed(2)}
+                            Total: ${app.state.currency}${totalVal.toFixed(2)}
                         </div>
                     </div>
 
@@ -141,125 +164,130 @@ window.components.deliveries = {
                 </div>
             </div>
         `;
-        
-        if (window.lucide) window.lucide.createIcons();
-    },
 
-    async addDraftItem() {
-        const prodId = document.getElementById('dist-product').value;
-        const qty = parseInt(document.getElementById('dist-qty').value);
-        const price = parseFloat(document.getElementById('dist-price').value);
+    if (window.lucide) window.lucide.createIcons();
+  },
 
-        if(!prodId || !qty || isNaN(price)) {
-            alert('Please select a product and fill valid quantity/price.');
-            return;
-        }
+  async addDraftItem() {
+    const prodId = document.getElementById("dist-product").value;
+    const qty = parseInt(document.getElementById("dist-qty").value);
+    const price = parseFloat(document.getElementById("dist-price").value);
 
-        const data = await window.dataStore.load();
-        const prod = data.inventory.find(i => i.id == prodId);
-        if(qty > prod.stock) {
-            alert(`Cannot distribute more than available stock (${prod.stock}).`);
-            return;
-        }
+    if (!prodId || !qty || isNaN(price)) {
+      alert("Please select a product and fill valid quantity/price.");
+      return;
+    }
 
-        this.state.draftItems.push({
-            productId: parseInt(prodId),
-            quantity: qty,
-            distributionPrice: price
-        });
-        
-        await this.renderModal();
-    },
+    const data = await window.dataStore.load();
+    const prod = data.inventory.find((i) => i.id == prodId);
+    if (qty > prod.stock) {
+      alert(`Cannot distribute more than available stock (${prod.stock}).`);
+      return;
+    }
 
-    async removeDraftItem(index) {
-        this.state.draftItems.splice(index, 1);
-        await this.renderModal();
-    },
+    this.state.draftItems.push({
+      productId: parseInt(prodId),
+      quantity: qty,
+      distributionPrice: price,
+    });
 
-    closeModal() {
-        document.getElementById('modal-container-deliveries').innerHTML = '';
-    },
+    await this.renderModal();
+  },
 
-    async handleSubmit() {
-        const recipient = document.getElementById('dist-recipient').value;
-        const rawDate = document.getElementById('dist-date').value;
+  async removeDraftItem(index) {
+    this.state.draftItems.splice(index, 1);
+    await this.renderModal();
+  },
 
-        if(!recipient || !rawDate) {
-            alert('Please fill recipient and date.');
-            return;
-        }
+  closeModal() {
+    document.getElementById("modal-container-deliveries").innerHTML = "";
+  },
 
-        if(this.state.draftItems.length === 0) {
-            alert('Please add at least one item.');
-            return;
-        }
+  async handleSubmit() {
+    const recipient = document.getElementById("dist-recipient").value;
+    const rawDate = document.getElementById("dist-date").value;
 
-        const formattedDate = new Date(rawDate).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    if (!recipient || !rawDate) {
+      alert("Please fill recipient and date.");
+      return;
+    }
 
-        const newDistribution = {
-            date: formattedDate,
-            recipient: recipient,
-            items: [...this.state.draftItems]
-        };
+    if (this.state.draftItems.length === 0) {
+      alert("Please add at least one item.");
+      return;
+    }
 
-        await window.dataStore.createItem('deliveries', newDistribution);
+    const formattedDate = new Date(rawDate).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-        const freshData = await window.dataStore.load();
-        app.state.data = freshData;
-        app.render();
-        this.closeModal();
-    },
+    const newDistribution = {
+      date: formattedDate,
+      recipient: recipient,
+      items: [...this.state.draftItems],
+    };
 
-    getStatusBadgeClass(status) {
-        if (!status) return 'badge-success';
-        switch (status.toLowerCase()) {
-            case 'completed':
-            case 'delivered': return 'badge-success';
-            case 'pending': return 'badge-warning';
-            default: return 'badge-success';
-        }
-    },
+    await window.dataStore.createItem("deliveries", newDistribution);
 
-    async printSlip(id) {
-        const data = await window.dataStore.load();
-        const order = data.deliveries.find(d => d.id === id);
-        if (!order) return;
+    const freshData = await window.dataStore.load();
+    app.state.data = freshData;
+    app.render();
+    this.closeModal();
+  },
 
-        let itemsRows = '';
-        let totalVal = 0;
+  getStatusBadgeClass(status) {
+    if (!status) return "badge-success";
+    switch (status.toLowerCase()) {
+      case "completed":
+      case "delivered":
+        return "badge-success";
+      case "pending":
+        return "badge-warning";
+      default:
+        return "badge-success";
+    }
+  },
 
-        const items = Array.isArray(order.items) ? order.items : [];
+  async printSlip(id) {
+    const data = await window.dataStore.load();
+    const order = data.deliveries.find((d) => d.id === id);
+    if (!order) return;
 
-        if (items.length > 0) {
-            itemsRows = items.map(item => {
-                const prod = data.inventory.find(i => i.id === item.productId);
-                const lineTotal = item.quantity * item.distributionPrice;
-                totalVal += lineTotal;
-                return `
+    let itemsRows = "";
+    let totalVal = 0;
+
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    if (items.length > 0) {
+      itemsRows = items
+        .map((item) => {
+          const prod = data.inventory.find((i) => i.id === item.productId);
+          const lineTotal = item.quantity * item.distributionPrice;
+          totalVal += lineTotal;
+          return `
                     <tr>
-                        <td>${prod ? prod.name : 'Unknown Product'}</td>
+                        <td>${prod ? prod.name : "Unknown Product"}</td>
                         <td>${item.quantity}</td>
-                        <td style="text-align: right;">$${item.distributionPrice.toFixed(2)}</td>
-                        <td style="text-align: right;">$${lineTotal.toFixed(2)}</td>
+                        <td style="text-align: right;">${app.state.currency}${item.distributionPrice.toFixed(2)}</td>
+                        <td style="text-align: right;">${app.state.currency}${lineTotal.toFixed(2)}</td>
                     </tr>
                 `;
-            }).join('');
-        } else {
-            itemsRows = `
+        })
+        .join("");
+    } else {
+      itemsRows = `
                 <tr>
-                    <td colspan="4">${order.products || 'No items listed'}</td>
+                    <td colspan="4">${order.products || "No items listed"}</td>
                 </tr>
             `;
-        }
+    }
 
-        const invoiceWindow = window.open('', '_blank', 'width=800,height=600');
-        const invoiceHTML = `
+    const invoiceWindow = window.open("", "_blank", "width=800,height=600");
+    const invoiceHTML = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -307,7 +335,7 @@ window.components.deliveries = {
                         ${itemsRows}
                         <tr class="total-row">
                             <td colspan="3" style="padding-top: 12px;">Total:</td>
-                            <td style="text-align: right; padding-top: 12px;">$${totalVal > 0 ? totalVal.toFixed(2) : '---'}</td>
+                            <td style="text-align: right; padding-top: 12px;">${app.state.currency}${totalVal > 0 ? totalVal.toFixed(2) : "---"}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -323,7 +351,7 @@ window.components.deliveries = {
             </html>
         `;
 
-        invoiceWindow.document.write(invoiceHTML);
-        invoiceWindow.document.close();
-    }
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+  },
 };

@@ -1,126 +1,167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HomeoStock - Simple Inventory Management</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css" />
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-    <div class="mobile-header" style="display: none;">
-        <div class="logo">
-            <i data-lucide="layout-dashboard" class="highlight"></i>
-            <span>HomeoStock</span>
-        </div>
-        <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
-            <i data-lucide="menu"></i>
-        </button>
+  </head>
+  <body>
+    <div class="mobile-header">
+      <div class="logo">
+        <i data-lucide="layout-dashboard" class="highlight"></i>
+        <span>HomeoStock</span>
+      </div>
+      <button class="mobile-nav-toggle" onclick="app.toggleSidebar()">
+        <i data-lucide="menu"></i>
+      </button>
     </div>
 
     <nav class="sidebar">
-        <div class="logo">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <i data-lucide="layout-dashboard" class="highlight"></i>
-                <span>Homeo<span class="highlight">Stock</span></span>
-            </div>
-            <button class="mobile-nav-toggle" style="color: white; padding: 0;" onclick="app.toggleSidebar()">
-                <i data-lucide="x"></i>
-            </button>
+      <div class="logo">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <i data-lucide="layout-dashboard" class="highlight"></i>
+          <span>Homeo<span class="highlight">Stock</span></span>
         </div>
-        <ul class="nav-links">
-            <li class="nav-item">
-                <a class="nav-link active" onclick="app.navigate('dashboard')">
-                    <i data-lucide="home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('inventory')">
-                    <i data-lucide="package"></i>
-                    <span>Inventory</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('procurement')">
-                    <i data-lucide="arrow-down-to-line"></i>
-                    <span>Procurement</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('deliveries')">
-                    <i data-lucide="truck"></i>
-                    <span>Distribution</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('employees')">
-                    <i data-lucide="users"></i>
-                    <span>Employees</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('audit')">
-                    <i data-lucide="clipboard-list"></i>
-                    <span>Audit Logs</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="app.navigate('settings')">
-                    <i data-lucide="settings"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-        </ul>
+        <button
+          class="mobile-nav-toggle"
+          style="color: white; padding: 0"
+          onclick="app.toggleSidebar()"
+        >
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <ul class="nav-links">
+        <li class="nav-item">
+          <a class="nav-link active" onclick="app.navigate('dashboard')">
+            <i data-lucide="home"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('inventory')">
+            <i data-lucide="package"></i>
+            <span>Inventory</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('procurement')">
+            <i data-lucide="arrow-down-to-line"></i>
+            <span>Procurement</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('deliveries')">
+            <i data-lucide="truck"></i>
+            <span>Distribution</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('employees')">
+            <i data-lucide="users"></i>
+            <span>Employees</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('audit')">
+            <i data-lucide="clipboard-list"></i>
+            <span>Audit Logs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" onclick="app.navigate('settings')">
+            <i data-lucide="settings"></i>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
     </nav>
+    <div class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
 
     <div class="main-wrapper">
-        <header class="header">
-            <div class="header-left">
-                <p>Welcome back, Admin 👋</p>
-                <h2 id="page-title">Dashboard Overview</h2>
-            </div>
-            <div class="header-actions">
-                <div class="search-bar-container">
-                    <i data-lucide="search"></i>
-                    <input type="text" class="search-bar" placeholder="Search now">
-                </div>
-                <div class="header-profile-section">
-                    <button class="icon-btn">
-                        <i data-lucide="bell"></i>
-                    </button>
-                    <!-- Placeholder avatar image matching the mockup -->
-                    <img src="https://i.pravatar.cc/150?img=11" alt="Profile" class="profile-avatar">
-                </div>
-            </div>
-        </header>
+      <header class="header">
+        <div class="header-left">
+          <p>Welcome back, Admin 👋</p>
+          <h2 id="page-title">Dashboard Overview</h2>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary language-toggle" onclick="app.toggleLanguage()" id="lang-toggle">
+              <i data-lucide="languages"></i>
+              <span>Bengali</span>
+          </button>
+          <div class="search-container">
+            <i data-lucide="search"></i>
+            <input type="text" class="search-bar" placeholder="Search now" />
+          </div>
+          <div class="header-profile-section">
+            <button class="icon-btn">
+              <i data-lucide="bell"></i>
+            </button>
+          </div>
+        </div>
+      </header>
 
-        <main class="content-area" id="main-content">
-            <!-- Dynamic content will be injected here -->
-        </main>
+      <main class="content-area" id="main-content">
+        <!-- Dynamic content will be injected here -->
+      </main>
     </div>
 
     <!-- Admin Login Overlay -->
-    <div id="login-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 9999; justify-content: center; align-items: center;">
-        <div class="card" style="width: 100%; max-width: 400px; padding: 40px; text-align: center;">
-            <div class="logo" style="justify-content: center; margin-bottom: 24px;">
-                <i data-lucide="layout-dashboard"></i>
-                <span>HomeoStock</span>
-            </div>
-            <h2 style="margin-bottom: 24px;">Admin Access</h2>
-            <form id="login-form">
-                <div class="form-group" style="text-align: left;">
-                    <label>Password</label>
-                    <input type="password" id="admin-password" class="form-input" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Login</button>
-            </form>
-            <p id="login-error" style="color: var(--danger-color); margin-top: 16px; display: none;">Incorrect password.</p>
+    <div
+      id="login-overlay"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-color);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      "
+    >
+      <div
+        class="card"
+        style="width: 100%; max-width: 400px; padding: 40px; text-align: center"
+      >
+        <div class="logo" style="justify-content: center; margin-bottom: 24px">
+          <i data-lucide="layout-dashboard"></i>
+          <span>HomeoStock</span>
         </div>
+        <h2 style="margin-bottom: 24px">Admin Access</h2>
+        <form id="login-form">
+          <div class="form-group" style="text-align: left">
+            <label>Password</label>
+            <input
+              type="password"
+              id="admin-password"
+              class="form-input"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%; justify-content: center"
+          >
+            Login
+          </button>
+        </form>
+        <p
+          id="login-error"
+          style="color: var(--danger-color); margin-top: 16px; display: none"
+        >
+          Incorrect password.
+        </p>
+      </div>
     </div>
 
     <!-- Application Scripts -->
@@ -132,10 +173,11 @@
     <script src="js/components/employees.js"></script>
     <script src="js/components/settings.js"></script>
     <script src="js/components/audit.js"></script>
+    <script src="js/translations.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Initialize icons
-        lucide.createIcons();
+      // Initialize icons
+      lucide.createIcons();
     </script>
-</body>
+  </body>
 </html>
