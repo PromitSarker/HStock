@@ -30,13 +30,13 @@ jobs:
             exit 1
           fi
           
-          # Debug: Check URL prefix (masked)
-          echo "Connecting to: ${DATABASE_URL:0:15}..."
+          # Debug: Verify version
+          /usr/lib/postgresql/17/bin/pg_dump --version
           
           FILENAME="backup-$(date +'%Y-%m-%d-%H%M%S').sql"
           
-          # Use more robust flags for cloud databases
-          pg_dump "$DATABASE_URL" --no-owner --no-privileges > "$FILENAME"
+          # Use absolute path to ensure v17 is used
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --no-owner --no-privileges > "$FILENAME"
           
           if [ -f "$FILENAME" ] && [ -s "$FILENAME" ]; then
             echo "Backup created successfully: $FILENAME"
