@@ -22,12 +22,25 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -z "$DATABASE_URL" ]; then
-            echo "Error: DATABASE_URL secret is not set."
+            echo "::error::DATABASE_URL secret is missing! Please add it in Settings > Secrets."
             exit 1
           fi
+          
+          # Debug: Check URL prefix (masked)
+          echo "Connecting to: ${DATABASE_URL:0:15}..."
+          
           FILENAME="backup-$(date +'%Y-%m-%d-%H%M%S').sql"
-          pg_dump "$DATABASE_URL" > "$FILENAME"
-          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          
+          # Use more robust flags for cloud databases
+          pg_dump "$DATABASE_URL" --no-owner --no-privileges > "$FILENAME"
+          
+          if [ -f "$FILENAME" ] && [ -s "$FILENAME" ]; then
+            echo "Backup created successfully: $FILENAME"
+            echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          else
+            echo "::error::Backup file was not created or is empty!"
+            exit 1
+          fi
 
       - name: Upload to Google Drive
         uses: adityak74/google-drive-upload-git-action@main
