@@ -46,24 +46,18 @@ jobs:
             exit 1
           fi
 
-      - name: Prepare Google Drive Credentials
-        id: encode_creds
-        env:
-          GDRIVE_KEY: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}
-        run: |
-          if [ -z "$GDRIVE_KEY" ]; then
-            echo "::error::GDRIVE_SERVICE_ACCOUNT_KEY secret is missing!"
-            exit 1
-          fi
-          # Convert the raw JSON to a base64 string
-          B64_CREDS=$(printf "%s" "$GDRIVE_KEY" | base64 | tr -d '\n')
-          echo "::add-mask::$B64_CREDS"
-          echo "b64_creds=$B64_CREDS" >> $GITHUB_OUTPUT
-
-      - name: Upload to Google Drive
-        uses: adityak74/google-drive-upload-git-action@main
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          credentials: ${{ steps.encode_creds.outputs.b64_creds }}
-          filename: ${{ env.FILENAME }}
-          folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
-          overwrite: false
+          node-version: '20'
+
+      - name: Install Google API Client
+        run: npm install googleapis
+
+      - name: Upload to Google Drive (Node.js)
+        env:
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}
+          FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FILE_PATH: ${{ github.workspace }}/${{ env.FILENAME }}
+          FILE_NAME: ${{ env.FILENAME }}
+        run: node scripts/upload-to-drive.js
