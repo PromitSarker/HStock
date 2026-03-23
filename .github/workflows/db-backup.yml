@@ -46,10 +46,24 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare Google Drive Credentials
+        id: encode_creds
+        env:
+          GDRIVE_KEY: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}
+        run: |
+          if [ -z "$GDRIVE_KEY" ]; then
+            echo "::error::GDRIVE_SERVICE_ACCOUNT_KEY secret is missing!"
+            exit 1
+          fi
+          # Convert the raw JSON to a base64 string
+          B64_CREDS=$(printf "%s" "$GDRIVE_KEY" | base64 | tr -d '\n')
+          echo "::add-mask::$B64_CREDS"
+          echo "b64_creds=$B64_CREDS" >> $GITHUB_OUTPUT
+
       - name: Upload to Google Drive
         uses: adityak74/google-drive-upload-git-action@main
         with:
-          credentials: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}
+          credentials: ${{ steps.encode_creds.outputs.b64_creds }}
           filename: ${{ env.FILENAME }}
           folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
           overwrite: false
