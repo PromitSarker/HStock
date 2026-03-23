@@ -154,7 +154,8 @@ body {
   align-items: center;
 }
 
-.search-bar-container i {
+.search-bar-container i,
+.search-bar-container svg {
   position: absolute;
   left: 16px;
   color: var(--text-secondary);
@@ -514,15 +515,20 @@ body {
     width: 100%;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
   .search-bar-container {
-    flex: 1;
-    order: 2; /* Search bar below on tablet/mobile if wrapped */
+    flex: 1 1 100%;
+    order: 3;
+    margin-top: 4px;
+    display: flex;
+    justify-content: center;
   }
 
   .search-bar {
     width: 100%;
+    max-width: 100%;
   }
 
   .language-toggle {
@@ -530,6 +536,10 @@ body {
     padding: 6px 10px;
     font-size: 13px;
     order: 1;
+  }
+
+  .icon-btn {
+    order: 2;
   }
 }
 
