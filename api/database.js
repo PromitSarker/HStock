@@ -1,15 +1,18 @@
 const { Pool } = require('pg');
 
 if (!process.env.DATABASE_URL) {
-  console.error("CRITICAL ERROR: DATABASE_URL environment variable is not set.");
+  const msg = "DATABASE_URL is missing. Please set it in Vercel Environment Variables.";
+  console.error(msg);
+  // Fail fast with a clear message
+  throw new Error(msg);
 }
 
 // Use environment variable for the connection string
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? {
+  ssl: {
     rejectUnauthorized: false
-  } : false
+  }
 });
 
 pool.on('error', (err) => {

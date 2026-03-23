@@ -71,6 +71,7 @@ window.translations = {
         // Deliveries
         newDistribution: "New Distribution",
         items: "Items",
+        recipient: "Recipient",
         printSlip: "Print Slip",
 
         // Audit
@@ -178,6 +179,7 @@ window.translations = {
         // Deliveries
         newDistribution: "নতুন বিতরণ",
         items: "পণ্যসমূহ",
+        recipient: "প্রাপক",
         printSlip: "স্লিপ প্রিন্ট করুন",
 
         // Audit
