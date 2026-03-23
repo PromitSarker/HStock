@@ -21,6 +21,18 @@ async function uploadFile() {
     const drive = google.drive({ version: 'v3', auth });
 
     try {
+        const client = await auth.getClient();
+        console.log(`Authenticated as Service Account: ${client.email || 'Service Account'}`);
+        
+        console.log(`Checking folder access for ID: ${folderId}...`);
+        try {
+            const folder = await drive.files.get({ fileId: folderId, fields: 'id, name' });
+            console.log(`Found folder: ${folder.data.name} (${folder.data.id})`);
+        } catch (err) {
+            console.error(`!!! Cannot find folder! Please check your FOLDER_ID and Sharing settings.`);
+            throw err;
+        }
+
         console.log(`Attempting to upload ${fileName} to folder ${folderId}...`);
         const response = await drive.files.create({
             requestBody: {
