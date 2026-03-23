@@ -1,11 +1,15 @@
 const { Pool } = require('pg');
 
+if (!process.env.DATABASE_URL) {
+  console.error("CRITICAL ERROR: DATABASE_URL environment variable is not set.");
+}
+
 // Use environment variable for the connection string
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  ssl: process.env.DATABASE_URL ? {
     rejectUnauthorized: false
-  }
+  } : false
 });
 
 pool.on('error', (err) => {
