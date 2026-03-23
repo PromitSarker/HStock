@@ -163,9 +163,9 @@ const app = {
 
         const logoText = document.querySelector('.logo h1');
         if (logoText && this.state.language === 'bn') {
-            logoText.textContent = 'হোমিওস্টক';
+            logoText.textContent = 'রাইম ম্যানেজমেন্ট';
         } else if (logoText) {
-            logoText.textContent = 'HomeoStock';
+            logoText.textContent = 'Raim Management';
         }
     },
 
