@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install PostgreSQL Client
         run: |
@@ -21,6 +21,10 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Error: DATABASE_URL secret is not set."
+            exit 1
+          fi
           FILENAME="backup-$(date +'%Y-%m-%d-%H%M%S').sql"
           pg_dump "$DATABASE_URL" > "$FILENAME"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
