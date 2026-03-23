@@ -2,17 +2,21 @@ const fs = require('fs');
 const { google } = require('googleapis');
 
 async function uploadFile() {
-    const credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
     const folderId = process.env.FOLDER_ID;
     const filePath = process.env.FILE_PATH;
     const fileName = process.env.FILE_NAME;
+    
+    let credentials;
+    try {
+        credentials = JSON.parse(process.env.GDRIVE_CREDENTIALS);
+    } catch (e) {
+        throw new Error('Failed to parse GDRIVE_CREDENTIALS secret. Make sure it is valid JSON.');
+    }
 
-    const auth = new google.auth.JWT(
-        credentials.client_email,
-        null,
-        credentials.private_key,
-        ['https://www.googleapis.com/auth/drive.file']
-    );
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/drive.file']
+    });
 
     const drive = google.drive({ version: 'v3', auth });
 
